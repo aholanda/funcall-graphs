@@ -107,7 +107,7 @@ func unpackFile(file string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return versionName, err
+	return versionName, nil
 }
 
 func addVertex(v2Adj map[string][]string, vertex string) map[string][]string {
@@ -249,6 +249,7 @@ func _GenerateData(p *program, version string) {
 		// When there is a version
 		// sometimes the command returns an error.
 		versionName, err := unpackFile(filepath)
+		check(err)
 
 		digraph, err := createGraphFromCflowsOutput(path.Join(tmpDir, versionName))
 		check(err)
