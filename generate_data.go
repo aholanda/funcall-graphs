@@ -104,9 +104,11 @@ func unpackFile(file string) (string, error) {
 	log.Println(cmdStr)
 	cmd = exec.Command("/bin/bash", "-c", cmdStr)
 	err = cmd.Run()
-	if err != nil {
-		return "", err
-	}
+	// Ignore error here because when the the version name
+	// is ok, contains the version number appended, the
+	// bash command returns non-zero, that is interpreted as
+	// error.
+
 	return versionName, nil
 }
 
