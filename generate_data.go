@@ -231,7 +231,7 @@ func _GenerateData(p *program, version string) {
 	// List existing remote files reached by url.
 	remoteFiles := listRemoteDir(url, p.listFilter)
 
-	tmpDir, err := ioutil.TempDir("/tmp", p.dirPrefix)
+	tmpDir, err := ioutil.TempDir("", p.dirPrefix)
 	check(err)
 
 	for _, remFile := range remoteFiles {
