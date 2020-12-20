@@ -15,7 +15,7 @@ var linux = &program{
 		"v2.4", "v2.5", "v2.6", "v3.0", "v3.x", "v4.x", "v5.x", "v6.x"},
 	listFilter: " | grep tar.xz | grep https | grep -v bdflush" +
 		"| grep -vi changelog | grep -vi modules | grep -v patches " +
-		"| grep -v v1.1.0 | awk '{print $2}'",
+		"| grep -v v1.1.0 | grep -v drm | grep -v dontuse | awk '{print $2}'",
 	dirPrefix: "linux",
 }
 
