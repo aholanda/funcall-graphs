@@ -82,7 +82,7 @@ func unpackFile(file string) (string, error) {
 	}
 
 	// Unpack the file
-	cmdStr := "/usr/bin/tar xfJ " + file + " -C " + dir
+	cmdStr := "`which tar` xfJ " + file + " -C " + dir
 	log.Println(cmdStr)
 	cmd := exec.Command("/bin/bash", "-c", cmdStr)
 	err = cmd.Run()
