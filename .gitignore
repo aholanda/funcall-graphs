@@ -1,3 +1,6 @@
+# Data files
+*.net
+
 # Binaries for programs and plugins
 *.exe
 *.exe~
