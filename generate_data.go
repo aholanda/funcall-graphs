@@ -25,8 +25,8 @@ const (
 	// directory where the main program is running. Inside it data with
 	// graph description are saved.
 	GraphDataRelativePath   string = "data"
-	termBrowser             string = "/usr/bin/lynx -dump "
-	downloader              string = "/usr/bin/wget"
+	termBrowser             string = "`which lynx` -dump "
+	downloader              string = "`which wget`"
 	compressedFileExtension string = ".tar.xz"
 )
 
@@ -208,7 +208,7 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 						`\s*(?P<rest>.*)`, level)
 					re = regexp.MustCompile(exp)
 					ret := re.FindStringSubmatch(line)
-					if len(ret) <= 1 {
+					if len(ret) <= 1 { // problems with parsing
 						continue NEXT_LINE
 					}
 					funcName := ret[1]
@@ -290,6 +290,16 @@ func cleanTmpFiles() {
 }
 
 func generateData(p *program) {
+	// Check if the needed programs are installed
+	cmds := [...]string{"cflow", "lynx", "wget", "tar"}
+	for _, cmd := range cmds {
+		path, err := exec.LookPath(cmd)
+		if err != nil {
+			log.Fatalf("%v: please install %s\n", err, cmd)
+		}
+		log.Printf("ok> found %s at path %s\n", cmd, path)
+	}
+
 	for _, v := range p.versions {
 		_GenerateData(p, v)
 		cleanTmpFiles()
