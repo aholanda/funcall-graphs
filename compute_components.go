@@ -27,12 +27,23 @@ func listDigraph(d *g.Digraph) {
 	}
 }
 
+func checkDataDirExists(path string) {
+	dirInfo, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		log.Fatalf("fatal: data directory \"%s\" does not exist.", path)
+	}
+	log.Printf("ok> Directory \"%d\" found.\n", dirInfo)
+}
+
 func listDataFiles() []string {
 	pathS, err := os.Getwd()
 	pathS = path.Join(pathS, "data")
 	if err != nil {
 		panic(err)
 	}
+
+	checkDataDirExists(pathS)
+
 	var files []string
 	filepath.Walk(pathS, func(fpath string, f os.FileInfo, _ error) error {
 		if !f.IsDir() {
