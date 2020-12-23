@@ -197,6 +197,7 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 			return nil, err
 		}
 		cflowOutLines := strings.Split(string(out), "\n")
+	NEXT_LINE:
 		for _, line := range cflowOutLines {
 			for l, level := range indentLevels {
 				exp := fmt.Sprintf(`^\{\s+%s\}.+`, level)
@@ -207,6 +208,9 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 						`\s*(?P<rest>.*)`, level)
 					re = regexp.MustCompile(exp)
 					ret := re.FindStringSubmatch(line)
+					if len(ret) <= 1 {
+						continue NEXT_LINE
+					}
 					funcName := ret[1]
 					// Sometimes a function performs no function call, so we
 					// add to hashmap to be counted as vertex after.
