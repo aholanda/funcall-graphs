@@ -131,7 +131,7 @@ func addAdjVertex(v2Adj map[string][]string, from, to string) map[string][]strin
 
 func buildGraph(v2Adj map[string][]string) *g.Digraph {
 	var digraph = g.NewDigraph(len(v2Adj))
-	var vcount g.VertexId
+	var vcount g.VertexID
 
 	// The digraph is built in two passes. In the first
 	// the vertices' names are indexed and in the second
