@@ -72,8 +72,8 @@ func extractVersionNumbering(path string) string {
 
 func computeComponents() {
 	var digraph *g.Digraph
-	var sep string = ";"
-	var resFn = "scc.csv"
+	var sep string = "\t"
+	var resFn = "scc.dat"
 
 	file, err := os.Create(resFn)
 	if err != nil {
@@ -82,12 +82,13 @@ func computeComponents() {
 	defer file.Close()
 	defer log.Printf("> wrote file %s\n", resFn)
 
+	fmt.Fprintf(file, "version_number%s", sep)
 	fmt.Fprintf(file, "#vertices%s", sep)
 	fmt.Fprintf(file, "#arcs%s", sep)
 	fmt.Fprintf(file, "avg_degree%s", sep)
 	fmt.Fprintf(file, "std_dev%s", sep)
 	fmt.Fprintf(file, "#components%s", sep)
-	fmt.Fprintf(file, "greatest_comp_size%s", sep)
+	fmt.Fprintf(file, "largest_component_size%s", sep)
 	fmt.Fprintf(file, "\n")
 
 	filenames := listDataFiles()
@@ -97,7 +98,7 @@ func computeComponents() {
 		scc := g.NewKosarajuSharirSCC(digraph)
 		scc.Compute()
 		version := extractVersionNumbering(fn)
-		fmt.Fprintf(file, "%s%s", version, sep)
+		fmt.Fprintf(file, "\"%s\"%s", version, sep)
 		fmt.Fprintf(file, "%d%s", digraph.V(), sep)
 		fmt.Fprintf(file, "%d%s", digraph.A(), sep)
 		avgDeg, stdDev := digraph.AverageDegree()
