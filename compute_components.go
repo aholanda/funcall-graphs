@@ -59,7 +59,7 @@ func listDataFiles() []string {
 }
 
 func extractVersionNumbering(path string) string {
-	exp := fmt.Sprintf(`\blinux-(\d+\.\d+\.*\d*)%s`,
+	exp := fmt.Sprintf(`\blinux-(\d+\.\d+\.*\d*\.*\d*)%s`,
 		GraphFormatExtension)
 	re := regexp.MustCompile(exp)
 	ret := re.FindStringSubmatch(path)
