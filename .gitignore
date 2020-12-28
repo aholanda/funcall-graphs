@@ -1,6 +1,7 @@
 # Generated data or result files
+*.dat
+*.pdf
 *.net
-*.csv
 
 # Binaries for programs and plugins
 *.exe
