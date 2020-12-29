@@ -1,4 +1,4 @@
-scc.pdf: scc.dat
+scc.pdf: plot.gp scc.dat
 	gnuplot $<
 TRASH += scc.pdf scc.dat
 
