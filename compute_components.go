@@ -92,9 +92,15 @@ func computeComponents() {
 	fmt.Fprintf(file, "\n")
 
 	filenames := listDataFiles()
-	for _, fn := range filenames {
+	for i, fn := range filenames {
+		if i%50 != 0 {
+			continue
+		}
 		log.Printf("> reading %v\n", fn)
 		digraph = gio.ReadPajek(fn)
+		// To reverse the graph and concentrate
+		// on the function usage
+		//digraph = g.Reverse(digraph)
 		scc := g.NewKosarajuSharirSCC(digraph)
 		scc.Compute()
 		version := extractVersionNumbering(fn)
@@ -107,6 +113,6 @@ func computeComponents() {
 		fmt.Fprintf(file, "%d%s", scc.Count(), sep)
 		fmt.Fprintf(file, "%d%s", scc.GreatestComponentSize(), sep)
 		fmt.Fprintf(file, "\n")
-		//break
+
 	}
 }
