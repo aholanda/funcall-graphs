@@ -18,7 +18,7 @@ var linux = &program{
 	listFilter: " | grep tar.xz | grep https | grep -v bdflush" +
 		"| grep -vi changelog | grep -vi modules | grep -v patches " +
 		"| grep -v v1.1.0 | grep -vi drm | grep -vi dontuse | grep -vi pre " +
-		"| awk '{print $2}'",
+		"| grep -vi badsig | awk '{print $2}'",
 	dirPrefix: "linux",
 }
 
