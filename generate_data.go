@@ -52,43 +52,35 @@ func listRemoteDir(url string, filter string) []string {
 	return strings.Fields(string(out))
 }
 
-func downloadFile(filepath string, fileURL string) error {
+func downloadFile(filepath string, fileURL string) {
 	// Get the data
 	resp, err := http.Get(fileURL)
-	if err != nil {
-		return err
-	}
+	check(err)
 	defer resp.Body.Close()
 
 	// Create the file
 	out, err := os.Create(filepath)
-	if err != nil {
-		return err
-	}
+	check(err)
 	defer out.Close()
 
 	log.Println("downloading", filepath)
 	// Write the body to file
 	_, err = io.Copy(out, resp.Body)
-	return err
+	check(err)
 }
 
-func unpackFile(file string) (string, error) {
+func unpackFile(file string) string {
 	// Get the temporary absolute path where the file
 	// is unpacked.
 	dir, err := filepath.Abs(filepath.Dir(file))
-	if err != nil {
-		return "", err
-	}
+	check(err)
 
 	// Unpack the file
 	cmdStr := "`which tar` xfJ " + file + " -C " + dir
 	log.Println(cmdStr)
 	cmd := exec.Command("/bin/bash", "-c", cmdStr)
 	err = cmd.Run()
-	if err != nil {
-		return "", err
-	}
+	check(err)
 
 	// Get the name of the program with the version appended as suffix.
 	versionName := extractFilePrefixFromFileURL(file)
@@ -109,7 +101,7 @@ func unpackFile(file string) (string, error) {
 	// bash command returns non-zero, that is interpreted as
 	// error.
 
-	return versionName, nil
+	return versionName
 }
 
 func addVertex(v2Adj map[string][]string, vertex string) map[string][]string {
@@ -161,7 +153,7 @@ func buildGraph(v2Adj map[string][]string) *g.Digraph {
 	return digraph
 }
 
-func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
+func createGraphFromCflowsOutput(dir string) *g.Digraph {
 	// Map to accumulate vertices and its adjacent lists before
 	// adding to graph, this procedure is needed because the
 	// number of vertices is not know at first sight
@@ -176,9 +168,7 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 	log.Println(cmdStr)
 	cmd := exec.Command("/bin/bash", "-c", cmdStr)
 	out, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
+	check(err)
 
 	cfiles := strings.Fields(string(out))
 	for _, cfile := range cfiles {
@@ -193,9 +183,8 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 		log.Println(cmdStr)
 		cmd := exec.Command("/bin/bash", "-c", cmdStr)
 		out, err = cmd.CombinedOutput()
-		if err != nil {
-			return nil, err
-		}
+		check(err)
+
 		cflowOutLines := strings.Split(string(out), "\n")
 	NEXT_LINE:
 		for _, line := range cflowOutLines {
@@ -226,10 +215,35 @@ func createGraphFromCflowsOutput(dir string) (*g.Digraph, error) {
 			}
 		}
 	}
-	return buildGraph(vertexToAdj), nil
+	return buildGraph(vertexToAdj)
 }
 
-func _GenerateData(p *program, version string) {
+func mkTmpDataDir(p *program) string {
+	// Set the temporary directory to put downloaded
+	// compressed and unpacked files. The files are
+	// saved at home directory plus "tmp" to avoid
+	// permission and space problems.
+	homeDir, err := os.UserHomeDir()
+	check(err)
+	tmpDir := path.Join(homeDir, "tmp")
+	check(err)
+	// Create $HOME/tmp if it does not exist
+	if _, err = os.Stat(tmpDir); os.IsNotExist(err) {
+		err = os.Mkdir(tmpDir, 0755)
+		check(err)
+	}
+	// Append specific information about what's being
+	// saved
+	tmpDataDir, err := ioutil.TempDir(tmpDir, p.dirPrefix)
+	if _, err = os.Stat(tmpDataDir); os.IsNotExist(err) {
+		err = os.Mkdir(tmpDataDir, 0755)
+		check(err)
+	}
+	log.Printf("> temporary directory: %s\n", tmpDataDir)
+	return tmpDataDir
+}
+
+func genData(p *program, version, tmpDataDir string) {
 	// Append the program version to its base URL
 	// to have access to the files.
 	url := p.baseURL + "/" + version
@@ -237,32 +251,26 @@ func _GenerateData(p *program, version string) {
 	// List existing remote files reached by url.
 	remoteFiles := listRemoteDir(url, p.listFilter)
 
-	tmpDir, err := ioutil.TempDir("", p.dirPrefix)
-	check(err)
-
 	for _, remFile := range remoteFiles {
 		if alreadyHasData(remFile) == true {
 			continue
 		}
 
 		// Construct the file path to write the downloaded data.
-		filepath := path.Join(tmpDir, path.Base(remFile))
-		err = downloadFile(filepath, remFile)
-		check(err)
+		filepath := path.Join(tmpDataDir, path.Base(remFile))
+		downloadFile(filepath, remFile)
+
 		// Dont check error of unpack file due
 		// some problems with shell commando to rename
 		// linux files without version.
 		// When there is a version
 		// sometimes the command returns an error.
-		versionName, err := unpackFile(filepath)
-		check(err)
+		versionName := unpackFile(filepath)
 
-		digraph, err := createGraphFromCflowsOutput(path.Join(tmpDir, versionName))
-		check(err)
+		digraph := createGraphFromCflowsOutput(path.Join(tmpDataDir, versionName))
 		digraph.NameIt(versionName)
 		fn := path.Join("data", versionName+GraphFormatExtension)
 		gio.WritePajek(digraph, fn)
-
 	}
 }
 
@@ -282,11 +290,12 @@ func alreadyHasData(fileURL string) bool {
 	return true
 }
 
-func cleanTmpFiles() {
+func cleanTmpFiles(tmpDir string) {
 	// Clean the linux files
-	cmd := exec.Command("/bin/bash", "-c", "rm -rf /tmp/linux*")
+	cmd := exec.Command("/bin/bash", "-c", "rm -rf "+tmpDir)
 	err := cmd.Run()
 	check(err)
+	log.Printf(" $ rm -rf %s\n", tmpDir)
 }
 
 func generateData(p *program) {
@@ -301,7 +310,8 @@ func generateData(p *program) {
 	}
 
 	for _, v := range p.versions {
-		_GenerateData(p, v)
-		cleanTmpFiles()
+		tmpDataDir := mkTmpDataDir(p)
+		genData(p, v, tmpDataDir)
+		cleanTmpFiles(tmpDataDir)
 	}
 }
