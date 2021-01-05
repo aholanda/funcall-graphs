@@ -9,8 +9,6 @@ type program struct {
 	dirPrefix  string
 }
 
-// TODO: vertify if the programs used are installed
-
 var linux = &program{
 	baseURL: "https://mirrors.edge.kernel.org/pub/linux/kernel",
 	versions: []string{"v1.1", "v1.2", "v1.3", "v2.0", "v2.2", "v2.3",
